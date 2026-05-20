@@ -1,10 +1,25 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { UsersModule } from './modules/users/users.module';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { dataSourceOptions } from './database/data-source';
+import { AuthModule } from './modules/auth/auth.module';
+import { RefreshTokensModule } from './modules/refresh-tokens/refresh-tokens.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    UsersModule,
+    AuthModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    TypeOrmModule.forRootAsync({
+      useFactory: () => ({
+        ...dataSourceOptions,
+        autoLoadEntities: true,
+      }),
+    }),
+    RefreshTokensModule,
+  ],
 })
 export class AppModule {}
