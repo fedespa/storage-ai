@@ -114,6 +114,11 @@ export class AuthService {
     return { accessToken, refreshToken: token };
   }
 
+  async logout(oldToken: string): Promise<void> {
+    const oldTokenHash = this.hashToken(oldToken);
+    await this.refreshTokensService.revoke(oldTokenHash);
+  }
+
   private generateRefreshToken(): {
     token: string;
     tokenHash: string;
