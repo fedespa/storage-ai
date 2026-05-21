@@ -17,9 +17,9 @@ import { RegisterDto } from './dto/register.dto';
 const COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
+  sameSite: 'lax',
   maxAge: 7 * 24 * 60 * 60 * 1000,
-  path: '/api/auth/refresh',
+  path: '/api/auth',
 };
 
 const COOKIE_NAME = 'refresh_token';
@@ -67,6 +67,21 @@ export class AuthController {
 
     return { accessToken };
   }
-}
 
-// @UseGuards(AuthGuard) // Uncomment this line to protect the route with the AuthGuard
+  @HttpCode(HttpStatus.OK)
+  @Post('logout')
+  async logout(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const oldRefreshToken = request.cookies[COOKIE_NAME];
+
+    if (oldRefreshToken) {
+      await this.authService.logout(oldRefreshToken);
+    }
+
+    response.clearCookie(COOKIE_NAME, COOKIE_OPTIONS);
+
+    return { message: 'Sesión cerrada exitosamente' };
+  }
+}
