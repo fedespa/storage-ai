@@ -1,98 +1,292 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 📚 DocChat — RAG-powered Document Q&A
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A system that lets you upload documents, index them intelligently, and chat with an AI that answers exclusively using your own files.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## ✨ Features
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- 📤 **Upload & process documents** — PDF, DOCX, TXT and more
+- 💬 **AI-powered chat** — Ask questions and get answers grounded in your documents
+- 🔎 **Intelligent search** — Semantic retrieval with hierarchical chunking
+- 🕒 **Chat history** — Resume previous conversations at any time
+- 🔒 **Private by design** — Each user only accesses their own files and chats
 
-## Project setup
+---
 
-```bash
-$ npm install
+## 🗂️ Functional Requirements
+
+### 👤 User Management
+- Register and log in
+- Private, isolated workspace per user
+- Secure logout
+
+### 📤 File Upload & Processing
+- Upload files (PDF, DOCX, TXT, etc.)
+- Automatic pipeline on upload:
+  - Text extraction
+  - Hierarchical chunking
+  - Embedding generation and indexing
+- Processing status: `processing` / `ready` / `error`
+
+### 📚 Knowledge Base
+- View and manage uploaded documents
+- Delete documents
+- Select which documents to use per chat session
+
+### 💬 AI Chat
+- Start new conversations
+- Ask questions about selected documents
+- Context-aware responses using only your content
+- Multi-turn conversation support
+- Multiple simultaneous chats
+
+### 🔎 Semantic Search
+- Finds relevant fragments across documents
+- Automatic chunk selection
+- Uses retrieved context to generate accurate answers
+
+### 🕒 Chat History
+- Browse previous conversations
+- Continue past chats
+- Delete chats
+
+### 🔔 Feedback & Error Handling
+- Typing/thinking indicator
+- Graceful error messages (e.g. unprocessed file)
+- Notifies when no relevant info is found in documents
+
+### 🛡️ Security & Privacy
+- Strict per-user data isolation
+- No data cross-contamination between users
+- Permanent data deletion support
+
+---
+
+## 🏗️ Architecture & Technical Details
+
+### Storage
+- Files are stored in **AWS S3**
+- The backend generates a **presigned S3 URL** and delivers it to the client for direct upload
+
+### Text Extraction
+- **LlamaParse** is used to extract text from uploaded files
+
+### Chunking Strategy
+- **Hierarchical chunking** is applied to segment documents for optimal retrieval
+
+### Embeddings
+- **OpenAI Embeddings API** generates vector representations (`text-embedding-3-small`, 1536 dimensions)
+- Vectors are stored in **PostgreSQL** using the `pgvector` extension
+
+### Query Processing
+- **Query Rewriting** reformulates user questions before retrieval to improve semantic search results
+
+### Authentication
+- **Access tokens** and **refresh tokens** with **token rotation**
+- Secure, stateless session management
+
+### Database
+- **PostgreSQL** with `pgvector` for vector similarity search
+
+---
+
+## 🔌 Endpoints
+
+### Authentication
+* `POST /api/auth/register` - User registration
+* `POST /api/auth/login` - Obtain Access and Refresh Tokens
+* `POST /api/auth/refresh` - Token rotation
+* `POST /api/auth/logout` - Revoke Refresh Token
+
+### Chat
+* `POST /api/chats` - Create a new chat session
+* `POST /api/chats/:id` - Continue an existing chat session
+
+### Documents
+* `POST /api/upload` - Upload a new document
+* `POST /api/documents/:id/confirm` - Confirm document upload
+
+---
+
+## 🗄️ Database Schema
+
+```
+users
+  └── documents
+        └── document_chunks (embeddings)
+        └── chat_sessions_documents (join table)
+  └── refresh_tokens
+  └── chat_sessions
+        └── chat_messages
+        └── chat_sessions_documents (join table)
 ```
 
-## Compile and run the project
+### Entity Relationship Diagram
 
-```bash
-# development
-$ npm run start
+```plantuml
+@startuml
+class users {
+  +id : UUID <<PK>>
+  +email : VARCHAR(150)
+  +password_hash : VARCHAR(255)
+  +role : VARCHAR(50)
+  +created_at : TIMESTAMPTZ
+  +updated_at : TIMESTAMPTZ
+  +deleted_at : TIMESTAMPTZ
+}
 
-# watch mode
-$ npm run start:dev
+class refresh_tokens {
+  +id : BIGSERIAL <<PK>>
+  +token_hash : VARCHAR(255)
+  +expires_at : TIMESTAMPTZ
+  +is_revoked : BOOLEAN
+  +user_id : UUID <<FK>>
+  +created_at : TIMESTAMPTZ
+  +updated_at : TIMESTAMPTZ
+  +deleted_at : TIMESTAMPTZ
+}
 
-# production mode
-$ npm run start:prod
+class documents {
+  +id : UUID <<PK>>
+  +user_id : UUID <<FK>>
+  +name : VARCHAR(255)
+  +extension : VARCHAR(10)
+  +size : BIGINT
+  +mime_type : VARCHAR(100)
+  +status : VARCHAR(50)
+  +key : VARCHAR(255)
+  +created_at : TIMESTAMPTZ
+  +updated_at : TIMESTAMPTZ
+  +deleted_at : TIMESTAMPTZ
+}
+
+class document_chunks {
+  +id : BIGSERIAL <<PK>>
+  +document_id : UUID <<FK>>
+  +user_id : UUID <<FK>>
+  +content : TEXT
+  +chunk_index : INT
+  +embedding_model : VARCHAR(100)
+  +embedding : vector(1536)
+  +created_at : TIMESTAMPTZ
+  +updated_at : TIMESTAMPTZ
+  +deleted_at : TIMESTAMPTZ
+}
+
+class chat_sessions {
+  +id : UUID <<PK>>
+  +user_id : UUID <<FK>>
+  +title : VARCHAR(255)
+  +created_at : TIMESTAMPTZ
+  +updated_at : TIMESTAMPTZ
+  +deleted_at : TIMESTAMPTZ
+}
+
+class chat_messages {
+  +id : BIGSERIAL <<PK>>
+  +chat_session_id : UUID <<FK>>
+  +role : VARCHAR(20)
+  +content : TEXT
+  +created_at : TIMESTAMPTZ
+  +updated_at : TIMESTAMPTZ
+  +deleted_at : TIMESTAMPTZ
+}
+
+class chat_sessions_documents {
+  +chat_session_id : UUID
+  +document_id : UUID
+}
+
+users "1" --> "0..*" documents
+users "1" --> "0..*" document_chunks
+documents "1" --> "0..*" document_chunks
+documents "1" --> "0..*" chat_sessions_documents
+users "1" --> "0..*" refresh_tokens
+users "1" --> "0..*" chat_sessions
+chat_sessions "1" --> "0..*" chat_messages
+chat_sessions "1" --> "0..*" chat_sessions_documents
+@enduml
 ```
 
-## Run tests
+> You can render this diagram at [PlantUML Online](https://www.plantuml.com/plantuml/uml/) or with any PlantUML-compatible tool.
 
-```bash
-# unit tests
-$ npm run test
+---
 
-# e2e tests
-$ npm run test:e2e
+## 🔄 RAG Pipeline Overview
 
-# test coverage
-$ npm run test:cov
+```
+User question
+     │
+     ▼
+Query Rewriting          ← Reformulates the question for better retrieval
+     │
+     ▼
+Embedding Generation     ← OpenAI Embeddings API
+     │
+     ▼
+Vector Similarity Search ← pgvector (cosine similarity)
+     │
+     ▼
+Chunk Retrieval          ← Hierarchical chunks from user's selected documents
+     │
+     ▼
+LLM Prompt Construction  ← Injected context + conversation history
+     │
+     ▼
+LLM Response             ← Grounded exclusively in the retrieved content
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 🛠️ Tech Stack
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+| Layer | Technology |
+|---|---|
+| File Storage | AWS S3 (presigned URLs) |
+| Text Extraction | LlamaParse |
+| Embeddings | OpenAI API (`text-embedding-3-small`) |
+| Vector DB | PostgreSQL + pgvector |
+| Auth | JWT (access + refresh tokens with rotation) |
+| Chunking | Hierarchical Chunking |
+| Query Enhancement | Query Rewriting |
+
+---
+
+## 🚀 Getting Started
+
+> _(Add your setup instructions here: environment variables, database migrations, running the backend and frontend, etc.)_
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Example
+cp .env.example .env
+
+PORT=3000
+NODE_ENV=development
+
+# Configuración de la Base de Datos
+DB_HOST=localhost
+DB_PORT=5432
+POSTGRES_USER=myuser
+POSTGRES_PASSWORD=mypassword
+POSTGRES_DB=mydb
+
+# Configuración de JWT
+JWT_SECRET=
+JWT_EXPIRES_IN=1h
+
+# Configuración de AWS
+AWS_REGION=
+AWS_BUCKET=
+AWS_ACCESS_KEY=
+AWS_SECRET_KEY=
+
+# Configuración de la API de OpenAI
+OPENAI_API_KEY=
+
+# Configuración de la API de LlamaCloud
+LLAMA_CLOUD_API_KEY=
+
+# Run migrations
+# Start the server
 ```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
