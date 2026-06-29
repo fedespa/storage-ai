@@ -25,6 +25,11 @@ export class AuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync(token);
+
+      if (!payload.sub) {
+        throw new UnauthorizedException('Token payload is malformed.');
+      }
+
       request.user = {
         userId: payload.sub,
         email: payload.email,
