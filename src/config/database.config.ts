@@ -13,6 +13,6 @@ export default registerAs('database', () => ({
   database: process.env.POSTGRES_DB,
   entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
   migrations: [join(__dirname, '../migrations/*{.ts,.js}')],
-  synchronize: process.env.NODE_ENV !== 'production',
+  synchronize: true, //process.env.NODE_ENV !== 'production'
   logging: false, //process.env.NODE_ENV === 'development',
 }));
