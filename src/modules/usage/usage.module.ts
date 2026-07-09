@@ -3,10 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Document } from '../../database/entities/document.entity';
 import { TokenUsage } from '../../database/entities/token-usage.entity';
 import { TokenUsageService } from './token-usage.service';
+import { UsageController } from './usage.controller';
 import { UsageMetricsService } from './usage-metrics.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([TokenUsage, Document])],
+  controllers: [UsageController],
   providers: [TokenUsageService, UsageMetricsService],
   exports: [TokenUsageService, UsageMetricsService],
 })

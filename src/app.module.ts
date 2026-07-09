@@ -12,6 +12,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { EventBusModule } from './common/event-bus/event-bus.module';
 import { ProcessingModule } from './modules/processing/processing.module';
 import { ChatsModule } from './modules/chats/chats.module';
+import { UsageModule } from './modules/usage/usage.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ChatsModule } from './modules/chats/chats.module';
     UploadModule,
     ProcessingModule,
     ChatsModule,
+    UsageModule,
   ],
 })
 export class AppModule {}
