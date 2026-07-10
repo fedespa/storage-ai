@@ -1,4 +1,4 @@
-import { extractChatModelUsage } from './token-usage.extractor';
+import { extractChatModelUsage } from '../token-usage.extractor';
 
 describe('extractChatModelUsage', () => {
   it('extracts complete and consistent usage metadata', () => {

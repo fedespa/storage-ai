@@ -3,12 +3,12 @@ import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { AuthGuard } from '../auth/guards/auth.guard';
-import { UsageController } from './usage.controller';
+import { AuthGuard } from '../../auth/guards/auth.guard';
+import { UsageController } from '../usage.controller';
 import {
   UsageMetricsService,
   type UserUsageMetrics,
-} from './usage-metrics.service';
+} from '../usage-metrics.service';
 
 describe('UsageController', () => {
   let application: INestApplication<App>;

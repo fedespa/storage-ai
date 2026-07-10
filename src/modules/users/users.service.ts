@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User, UserRole } from 'src/database/entities/user.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 
 export interface CreateUserParams {
   email: string;
@@ -35,5 +35,15 @@ export class UserService {
     });
 
     return this.userRepository.save(user);
+  }
+
+  async updatePasswordHash(
+    userId: string,
+    passwordHash: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const repo = manager ? manager.getRepository(User) : this.userRepository;
+
+    await repo.update({ id: userId }, { passwordHash });
   }
 }

@@ -14,7 +14,7 @@ import {
 import { EntityManager, ILike, In, IsNull, Repository } from 'typeorm';
 import { DocumentUploadedEvent } from './events/document-uploaded.event';
 import { DocumentListQueryDto } from './dto/document-list-query.dto';
-import { calculateOffset } from '../chats/shared/chat-pagination';
+import { calculateOffset } from '../../common/pagination/pagination';
 
 export interface CreateDocumentParams {
   userId: string;

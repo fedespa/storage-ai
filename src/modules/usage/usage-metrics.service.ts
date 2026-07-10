@@ -48,7 +48,9 @@ export class UsageMetricsService {
         },
       };
     } catch (error) {
-      throw new Error('Failed to aggregate user usage metrics.', { cause: error });
+      throw new Error('Failed to aggregate user usage metrics.', {
+        cause: error,
+      });
     }
   }
 

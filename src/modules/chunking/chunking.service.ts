@@ -129,6 +129,10 @@ export class ChunkingService {
 
     const childChunks = await queryBuilder.getRawAndEntities();
 
+    if (!childChunks.raw.length || !childChunks.entities.length) {
+      return [];
+    }
+
     const bestDistance = Number(childChunks.raw[0].distance);
 
     const dynamicThreshold = Math.min(
@@ -139,16 +143,21 @@ export class ChunkingService {
     const parentIdsToFetch = new Set<string>();
 
     childChunks.raw.forEach((row, index) => {
+      const entity = childChunks.entities[index];
+      if (!entity) {
+        return;
+      }
+
       const currentDistance = Number(row.distance);
       const isIncluded = currentDistance <= dynamicThreshold;
       console.log({
-        id: childChunks.entities[index].id,
+        id: entity.id,
         distance: currentDistance,
         status: isIncluded ? '✅ PASÓ' : '❌ FILTRADO',
       });
 
       if (isIncluded) {
-        parentIdsToFetch.add(childChunks.entities[index].parentId);
+        parentIdsToFetch.add(entity.parentId);
       }
     });
 

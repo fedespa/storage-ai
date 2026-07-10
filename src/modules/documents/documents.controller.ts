@@ -13,7 +13,7 @@ import type { RequestWithUser } from 'src/common/request-with-user.interface';
 import { DocumentsService } from './documents.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { DocumentListQueryDto } from './dto/document-list-query.dto';
-import { buildPaginatedResponse } from '../chats/shared/chat-pagination';
+import { buildPaginatedResponse } from '../../common/pagination/pagination';
 import { mapDocumentListItem } from './document-presenters';
 
 @Controller('documents')

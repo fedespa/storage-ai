@@ -4,6 +4,7 @@ import { RefreshToken } from './refresh-token.entity';
 import { Document } from './document.entity';
 import { DocumentChunk } from './document-chunk.entity';
 import { ChatSession } from './chat-session.entity';
+import { PasswordResetToken } from './password-reset-token.entity';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -34,6 +35,12 @@ export class User extends BaseEntity {
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshTokens!: RefreshToken[];
 
+  @OneToMany(
+    () => PasswordResetToken,
+    (passwordResetToken) => passwordResetToken.user,
+  )
+  passwordResetTokens!: PasswordResetToken[];
+
   @OneToMany(() => Document, (document) => document.user)
   documents!: Document[];
 
@@ -42,4 +49,5 @@ export class User extends BaseEntity {
 
   @OneToMany(() => ChatSession, (session) => session.user)
   chatSessions!: ChatSession[];
+
 }

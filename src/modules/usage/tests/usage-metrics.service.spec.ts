@@ -1,19 +1,21 @@
-import { Repository } from 'typeorm';
-import { Document } from '../../database/entities/document.entity';
-import { TokenUsage } from '../../database/entities/token-usage.entity';
-import { UsageMetricsService } from './usage-metrics.service';
+import { IsNull, Repository } from 'typeorm';
+import { Document } from '../../../database/entities/document.entity';
+import { TokenUsage } from '../../../database/entities/token-usage.entity';
+import { UsageMetricsService } from '../usage-metrics.service';
 
 describe('UsageMetricsService', () => {
   it('returns the token totals and storage usage for the requested user', async () => {
+    const tokenUsageSum = jest
+      .fn()
+      .mockResolvedValueOnce(120)
+      .mockResolvedValueOnce(80)
+      .mockResolvedValueOnce(200);
     const tokenUsageRepository = {
-      sum: jest
-        .fn()
-        .mockResolvedValueOnce(120)
-        .mockResolvedValueOnce(80)
-        .mockResolvedValueOnce(200),
+      sum: tokenUsageSum,
     } as unknown as Repository<TokenUsage>;
+    const documentUsageSum = jest.fn().mockResolvedValue(2_500_000);
     const documentRepository = {
-      sum: jest.fn().mockResolvedValue(2_500_000),
+      sum: documentUsageSum,
     } as unknown as Repository<Document>;
     const service = new UsageMetricsService(
       tokenUsageRepository,
@@ -31,29 +33,25 @@ describe('UsageMetricsService', () => {
       },
     });
 
-    expect(tokenUsageRepository.sum).toHaveBeenNthCalledWith(
-      1,
-      'promptTokens',
-      { userId: 'user-id' },
-    );
-    expect(tokenUsageRepository.sum).toHaveBeenNthCalledWith(
-      2,
-      'completionTokens',
-      { userId: 'user-id' },
-    );
-    expect(tokenUsageRepository.sum).toHaveBeenNthCalledWith(
-      3,
-      'totalTokens',
-      { userId: 'user-id' },
-    );
+    expect(tokenUsageSum).toHaveBeenNthCalledWith(1, 'promptTokens', {
+      userId: 'user-id',
+    });
+    expect(tokenUsageSum).toHaveBeenNthCalledWith(2, 'completionTokens', {
+      userId: 'user-id',
+    });
+    expect(tokenUsageSum).toHaveBeenNthCalledWith(3, 'totalTokens', {
+      userId: 'user-id',
+    });
   });
 
   it('aggregates only the requested user non-deleted documents regardless of status', async () => {
+    const tokenUsageSum = jest.fn().mockResolvedValue(0);
     const tokenUsageRepository = {
-      sum: jest.fn().mockResolvedValue(0),
+      sum: tokenUsageSum,
     } as unknown as Repository<TokenUsage>;
+    const documentUsageSum = jest.fn().mockResolvedValue(3_005_000);
     const documentRepository = {
-      sum: jest.fn().mockResolvedValue(3_005_000),
+      sum: documentUsageSum,
     } as unknown as Repository<Document>;
     const service = new UsageMetricsService(
       tokenUsageRepository,
@@ -71,25 +69,20 @@ describe('UsageMetricsService', () => {
       },
     });
 
-    expect(documentRepository.sum).toHaveBeenCalledWith(
-      'size',
-      expect.objectContaining({
-        userId: 'workspace-user-id',
-        deletedAt: expect.any(Object),
-      }),
-    );
-    expect(documentRepository.sum).toHaveBeenCalledWith(
-      'size',
-      expect.not.objectContaining({ status: expect.anything() }),
-    );
+    expect(documentUsageSum).toHaveBeenCalledWith('size', {
+      userId: 'workspace-user-id',
+      deletedAt: IsNull(),
+    });
   });
 
   it('returns zero for empty token and storage aggregates', async () => {
+    const tokenUsageSum = jest.fn().mockResolvedValue(null);
     const tokenUsageRepository = {
-      sum: jest.fn().mockResolvedValue(null),
+      sum: tokenUsageSum,
     } as unknown as Repository<TokenUsage>;
+    const documentUsageSum = jest.fn().mockResolvedValue(null);
     const documentRepository = {
-      sum: jest.fn().mockResolvedValue(null),
+      sum: documentUsageSum,
     } as unknown as Repository<Document>;
     const service = new UsageMetricsService(
       tokenUsageRepository,

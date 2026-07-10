@@ -98,10 +98,14 @@ A system that lets you upload documents, index them intelligently, and chat with
 * `POST /api/auth/login` - Obtain Access and Refresh Tokens
 * `POST /api/auth/refresh` - Token rotation
 * `POST /api/auth/logout` - Revoke Refresh Token
+* `POST /api/auth/password-reset/request` - Request a password reset email
+* `POST /api/auth/password-reset/confirm` - Confirm a new password with a reset token
 
 ### Chat
+* `GET /api/chats?page=1&limit=20` - List chat sessions for the authenticated user
 * `POST /api/chats` - Create a new chat session
 * `POST /api/chats/:id` - Continue an existing chat session
+* `GET /api/chats/:id/messages?page=1&limit=20` - List messages for a chat session
 
 ### Documents
 * `POST /api/upload` - Upload a new document
@@ -117,6 +121,7 @@ users
         └── document_chunks (embeddings)
         └── chat_sessions_documents (join table)
   └── refresh_tokens
+  └── password_reset_tokens
   └── chat_sessions
         └── chat_messages
         └── chat_sessions_documents (join table)
@@ -257,6 +262,18 @@ LLM Response             ← Grounded exclusively in the retrieved content
 
 > _(Add your setup instructions here: environment variables, database migrations, running the backend and frontend, etc.)_
 
+### Environment variables for password reset
+
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_SECURE`
+- `SMTP_USER`
+- `SMTP_PASSWORD`
+- `SMTP_FROM`
+- `FRONTEND_URL`
+
+The reset email points directly to the frontend at `/reset-password?token=...`.
+
 ```bash
 # Example
 cp .env.example .env
@@ -286,6 +303,17 @@ OPENAI_API_KEY=
 
 # Configuración de la API de LlamaCloud
 LLAMA_CLOUD_API_KEY=
+
+# Configuración de Re-Ranking (Cross-Encoder)
+RERANKING_ENABLED=true
+RERANKING_PROVIDER=cross-encoder-jina
+RERANKING_API_URL=https://api.jina.ai/v1/rerank
+RERANKING_API_KEY=
+RERANKING_MODEL=jina-reranker-v2-base-multilingual
+RERANKING_TOP_K_IN=10
+RERANKING_TOP_K_OUT=3
+RERANKING_MIN_SCORE=0
+RERANKING_TIMEOUT_MS=1500
 
 # Run migrations
 # Start the server

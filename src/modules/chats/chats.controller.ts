@@ -1,23 +1,36 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ChatsService } from './chats.service';
-import { AuthGuard } from '../auth/guards/auth.guard';
 import type { RequestWithUser } from 'src/common/request-with-user.interface';
-import { StartChatDto } from './dto/start-chat.dto';
-import { QueryDto } from './dto/query.dto';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { ChatsService } from './chats.service';
+import { PaginationQueryDto } from './dto/pagination-query.dto';
+import { QueryDto } from './send-message/query.dto';
+import { StartChatDto } from './start-chat/start-chat.dto';
 
 @Controller('chats')
 export class ChatsController {
   constructor(private readonly chatService: ChatsService) {}
+
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Get()
+  public async listChats(
+    @Req() request: RequestWithUser,
+    @Query() pagination: PaginationQueryDto,
+  ) {
+    return await this.chatService.listChats(request.user.userId, pagination);
+  }
 
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.CREATED)
@@ -30,6 +43,7 @@ export class ChatsController {
       body,
       request.user.userId,
     );
+
     return {
       message: response,
     };
@@ -52,5 +66,20 @@ export class ChatsController {
     return {
       response,
     };
+  }
+
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Get('/:id/messages')
+  public async listChatMessages(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) chatSessionId: string,
+    @Req() request: RequestWithUser,
+    @Query() pagination: PaginationQueryDto,
+  ) {
+    return await this.chatService.listChatMessages(
+      chatSessionId,
+      request.user.userId,
+      pagination,
+    );
   }
 }

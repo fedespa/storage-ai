@@ -2,8 +2,8 @@ import { Repository } from 'typeorm';
 import {
   ChatModelInteractionType,
   TokenUsage,
-} from '../../database/entities/token-usage.entity';
-import { TokenUsageService } from './token-usage.service';
+} from '../../../database/entities/token-usage.entity';
+import { TokenUsageService } from '../token-usage.service';
 
 describe('TokenUsageService', () => {
   it('persists exactly one record for reliable usage', async () => {

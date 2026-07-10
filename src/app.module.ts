@@ -8,17 +8,20 @@ import { UploadModule } from './modules/upload/upload.module';
 import databaseConfig from './config/database.config';
 import awsConfig from './config/aws.config';
 import jwtConfig from './config/jwt.config';
+import rerankingConfig from './config/reranking.config';
+import mailConfig from './config/mail.config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { EventBusModule } from './common/event-bus/event-bus.module';
 import { ProcessingModule } from './modules/processing/processing.module';
 import { ChatsModule } from './modules/chats/chats.module';
+import { PasswordResetModule } from './modules/password-reset/password-reset.module';
 import { UsageModule } from './modules/usage/usage.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, awsConfig, jwtConfig],
+      load: [databaseConfig, awsConfig, jwtConfig, rerankingConfig, mailConfig],
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -34,6 +37,7 @@ import { UsageModule } from './modules/usage/usage.module';
     UploadModule,
     ProcessingModule,
     ChatsModule,
+    PasswordResetModule,
     UsageModule,
   ],
 })
