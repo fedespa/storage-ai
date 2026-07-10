@@ -11,8 +11,10 @@ import {
   Document,
   DocumentStatus,
 } from 'src/database/entities/document.entity';
-import { EntityManager, In, Repository } from 'typeorm';
+import { EntityManager, ILike, In, IsNull, Repository } from 'typeorm';
 import { DocumentUploadedEvent } from './events/document-uploaded.event';
+import { DocumentListQueryDto } from './dto/document-list-query.dto';
+import { calculateOffset } from '../chats/shared/chat-pagination';
 
 export interface CreateDocumentParams {
   userId: string;
@@ -117,6 +119,40 @@ export class DocumentsService {
     return count === uniqueIds.length;
   }
 
+  public async listByUser(
+    userId: string,
+    query: DocumentListQueryDto,
+  ): Promise<[Document[], number]> {
+    const { page, limit, search } = query;
+    const normalizedSearch = search?.trim();
+    const where = {
+      userId,
+      deletedAt: IsNull(),
+      ...(normalizedSearch
+        ? { name: ILike(`%${escapeLikePattern(normalizedSearch)}%`) }
+        : {}),
+    };
+
+    return await this.documentRepository.findAndCount({
+      where,
+      select: {
+        id: true,
+        name: true,
+        extension: true,
+        mimeType: true,
+        size: true,
+        status: true,
+        createdAt: true,
+      },
+      order: {
+        createdAt: 'DESC',
+        id: 'DESC',
+      },
+      skip: calculateOffset(page, limit),
+      take: limit,
+    });
+  }
+
   // ==========================================
   // MÉTODOS DE MUTACIÓN DE ESTADO
   // ==========================================
@@ -153,4 +189,8 @@ export class DocumentsService {
       status: DocumentStatus.PROCESSING,
     });
   }
+}
+
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, '\\$&');
 }
