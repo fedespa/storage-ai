@@ -1,13 +1,13 @@
 services:
   backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: backend_container
     expose:
       - "3000"
     env_file:
-      - .env
+      - ./backend/.env
     depends_on:
       - postgres
     networks:
@@ -16,12 +16,12 @@ services:
     image: pgvector/pgvector:pg16
     container_name: db_container
     env_file:
-      - .env
+      - ./backend/.env
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-db:/docker-entrypoint-initdb.d
+      - ./backend/init-db:/docker-entrypoint-initdb.d
     networks:
       - storage-ai-net
     healthcheck:
@@ -36,7 +36,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./backend/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - backend
     networks:
