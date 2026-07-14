@@ -12,15 +12,11 @@ The core product value is trustworthy answers grounded in user-owned content, wi
 
 ### User
 
-A user owns a private workspace.
+A user owns a private set of documents, chats, messages, chunks, and usage data.
 
-All documents, chunks, chats, messages, and tokens must be scoped by `user_id`.
+The user's data is associated directly with `user_id`. There is no separate workspace entity.
 
-### Workspace
-
-A workspace is the effective security boundary around a user's data.
-
-The system must never allow one workspace to read or mutate another workspace's resources.
+`user_id` is the logical security boundary: the system must never allow one user to read or mutate resources associated with another user.
 
 ### Document
 
@@ -49,9 +45,9 @@ Chunks exist only in the context of a source document and inherit its ownership 
 
 ### Chat
 
-A chat is a multi-turn conversation session scoped to one user and associated with one or more selected documents.
+A chat is a multi-turn conversation session associated with one user and optionally one or more selected documents owned by that same user.
 
-The selected documents define the retrieval boundary for answers in that chat.
+When a chat has selected documents, they define the retrieval boundary for its answers. A chat without selected documents uses global retrieval across the user's eligible documents.
 
 ### Message
 
@@ -91,7 +87,7 @@ User data isolation is a hard invariant.
 
 Documents, chunks, chats, messages, and tokens must always be filtered and validated by `user_id`.
 
-The system must never expose or retrieve resources owned by another user.
+The system must never expose or retrieve resources associated with another user's `user_id`.
 
 ### Retrieval Eligibility
 
@@ -111,9 +107,9 @@ The system must not answer using:
 
 ### Selected Document Boundary
 
-A chat may reference one or more selected documents.
+A chat may reference zero or more selected documents.
 
-Retrieval for that chat must stay inside that explicit selection, even if the same user owns other ready documents.
+When a chat has selected documents, retrieval must stay inside that explicit selection, even if the same user owns other ready documents. When it has none, retrieval may use the user's eligible documents globally.
 
 ## Key Workflows
 
@@ -149,12 +145,14 @@ Documents use these processing statuses:
 - `PENDING`
 - `PROCESSING`
 - `PROCESSED`
+- `FAILED`
 
 Meaning:
 
 - `PENDING`: the document record exists, but the upload has not yet been confirmed.
 - `PROCESSING`: the upload was confirmed and the extraction/indexing pipeline is still running.
 - `PROCESSED`: processing finished successfully and the document is eligible for retrieval.
+- `FAILED`: processing finished unsuccessfully and the document is not eligible for retrieval.
 
 ## System Boundaries
 
@@ -181,8 +179,9 @@ The client is responsible for initiating uploads, confirming uploads, selecting 
 ## Edge Cases
 
 - A file uploaded to S3 but not confirmed by the client must not be treated as processed or retrievable.
-- A document in `error` must not participate in retrieval.
-- A chat with no ready selected documents should fail safely rather than produce an ungrounded answer.
+- A document in `FAILED` must not participate in retrieval.
+- A chat with selected documents that are not ready must reject them. A global chat may retrieve only eligible documents owned by its user.
+- A user without any eligible documents cannot start a chat, because no grounded answer can be produced.
 - A request that references another user's document, chunk, chat, or message must be rejected.
 - Retrieval should ignore documents not explicitly selected for the chat, even if they belong to the same user.
 
@@ -191,7 +190,6 @@ The client is responsible for initiating uploads, confirming uploads, selecting 
 Prefer these terms consistently in code, tests, tickets, and docs:
 
 - `user`
-- `workspace`
 - `document`
 - `chunk`
 - `chat`

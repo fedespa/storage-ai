@@ -6,10 +6,10 @@ Project domain, business rules, and ubiquitous language live in `CONTEXT.md`.
 
 ## Working Agreement
 
-- Write all code, identifiers, file names, and architecture definitions in English.
+- Write production code, identifiers, filenames, architecture decisions, tests, and technical documentation in English.
 - Communicate with the user in Spanish.
 - Prefer strong typing and keep `any` out of the codebase.
-- Keep functions small and focused on one responsibility.
+- Keep functions focused on one business responsibility; extract logic when a function mixes validation, persistence, orchestration, and presentation.
 - Prefer guard clauses over deeply nested conditionals.
 - Use defensive error handling around asynchronous work and data mutations.
 - Make mutation scripts idempotent when duplicates would be harmful.
@@ -37,7 +37,23 @@ This repo uses a single-context domain docs layout. See `docs/agents/domain.md`.
 
 ## Testing Standards
 
-- File Separation: Never mix test files with production code. Place all tests strictly inside a centralized `tests/` directory mirroring the `src/` structure.
+- File Separation: Unit and integration tests live under `tests/`, mirroring `src/`.
+- End-to-end tests live under `test/`.
+- Do not place tests inside `src/`.
 - Naming Convention: Name test files explicitly as `*.test.ts` or `*.spec.ts` depending on the framework configuration.
 - Isolation & Cleanliness: Each test must be completely isolated and independent. Always mock external network requests, databases, and third-party APIs.
 - Readability (AAA Pattern): Structure tests using the Arrange-Act-Assert pattern. Keep assertions clear, focused, and descriptive of the expected behavior, not the implementation details.
+
+## Git Workflow
+
+- Never modify `main` or `develop` directly.
+- Before switching branches, inspect and report the current branch and working-tree changes.
+- Read-only analysis does not require creating a branch.
+- Before implementing the first ticket of a feature, create or switch to a dedicated branch named `codex/<feature-slug>`.
+- Never switch branches if it would overwrite, hide, or mix unrelated user changes.
+- Use one feature branch for all tickets belonging to the same feature.
+- Commit locally after completing each ticket.
+- Do not push commits automatically.
+- Only push when the user explicitly requests it.
+- Before creating a branch, preserve and report any pre-existing working-tree changes.
+- Commit messages must be written in English and follow Conventional Commits when practical.
